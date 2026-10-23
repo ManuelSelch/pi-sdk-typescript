@@ -13,7 +13,7 @@ try {
   execFileSync(process.execPath, [resolveNpmCli(), "pack", "--pack-destination", temporary], { cwd: root, stdio: "pipe" });
   const tarball = (await readdir(temporary)).find(name => name.endsWith(".tgz")); assert(tarball);
   await writeFile(join(temporary, "package.json"), JSON.stringify({ private: true, type: "module" }));
-  execFileSync(process.execPath, [resolveNpmCli(), "install", "--offline", "--ignore-scripts", "--no-audit", "--no-fund", "--package-lock=false", join(temporary, tarball)], { cwd: temporary, stdio: "pipe" });
+  execFileSync(process.execPath, [resolveNpmCli(), "install", "--ignore-scripts", "--no-audit", "--no-fund", "--package-lock=false", join(temporary, tarball)], { cwd: temporary, stdio: "pipe" });
   const manifest = JSON.parse(await readFile(join(temporary, "node_modules/@manuelselch/pi-sdk/package.json"), "utf8")); assert.deepEqual(Object.keys(manifest.dependencies), ["zod"]);
   const modules = await readdir(join(temporary, "node_modules")); assert(!modules.some(name => ["react", "@mantine", "@earendil-works", "ws"].includes(name)));
   await writeFile(join(temporary, "consumer.ts"), `
@@ -62,6 +62,6 @@ const prompt = client.prompt("runtime", "hello"); assert.equal(sent[2].method, "
 client.dispose(); assert.equal(callbacks.size, 0); assert.equal(client.getState().connection.phase, "disposed");
 `);
   execFileSync(process.execPath, ["consumer.mjs"], { cwd: temporary, stdio: "pipe" });
-  console.log("Packed SDK verified offline: v2-only contract/artifacts, typed admission, lifecycle, clean output, dependency isolation and ES-only TypeScript consumer.");
+  console.log("Packed SDK verified: v2-only contract/artifacts, typed admission, lifecycle, clean output, dependency isolation and ES-only TypeScript consumer.");
 } catch (error) { if (error.stdout) console.error(error.stdout.toString()); if (error.stderr) console.error(error.stderr.toString()); throw error; }
 finally { await rm(temporary, { recursive: true, force: true }); }
