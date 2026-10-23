@@ -147,4 +147,29 @@ npm run verify:package
 
 `npm run probe:swift:generate` writes a portable probe to `protocol/swift/GeneratedModels.swift`, never into a sibling repository. Swift imports pinned artifacts explicitly using its own synchronization script; TypeScript remains the sole protocol authority. Swift client/probe tests live in the separate `pi-sdk-swift` repository. Real-server cross-language tests remain in Pi Chat until server extraction.
 
+## SonarQube Cloud
+
+`npm run test:coverage` builds the SDK, runs the tests and writes text coverage
+plus `coverage/lcov.info`. Coverage includes all `src/**/*.ts` files, including
+unexecuted source files. Ordinary `npm test` runs without coverage.
+
+GitHub Actions uploads LCOV after all TypeScript checks pass. The dependent
+`sonar` job scans the repository and waits for the quality gate; a failed gate
+fails the job. Fork pull requests skip scanning because they cannot access the
+token. Analysis scope uses `sonar.exclusions`, not explicit source/test roots;
+excluded tests are not analyzed but still contribute source coverage.
+
+To enable scanning:
+
+1. Import `ManuelSelch/pi-sdk-typescript` into SonarQube Cloud under organization
+   `manuelselch`, with project key `ManuelSelch_pi-sdk-typescript`.
+2. Select CI-based analysis and disable automatic analysis for the project.
+3. Add the GitHub Actions repository secret `SONAR_TOKEN` with an analysis token
+   authorized for this Cloud project.
+4. Set repository variables `SONAR_ORGANIZATION=manuelselch` and
+   `SONAR_PROJECT_KEY=ManuelSelch_pi-sdk-typescript`. Without both variables, the
+   scan job is skipped.
+5. Push the changes and verify the `sonar` job. If required, configure GitHub
+   branch protection separately to require this check.
+
 Use `npm pack --pack-destination <directory>` to build a local consumer artifact. Nothing is published. See [PROTOCOL.md](PROTOCOL.md) and [SOURCE.md](SOURCE.md).
