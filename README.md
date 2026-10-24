@@ -1,5 +1,7 @@
 # `@manuelselch/pi-sdk` — TypeScript client
 
+Licensed under the [MIT License](LICENSE).
+
 UI-independent TypeScript client for the Pi Server v2 protocol. The coordinated
 Pi Chat server, SDK and application cutover is complete. **V2 only:** v1 envelopes
 are rejected; no compatibility or automatic mutation replay is implemented.
