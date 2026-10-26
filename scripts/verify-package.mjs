@@ -26,6 +26,9 @@ const transport: TransportFactory = (_endpoint, _handlers) => ({ send(_text) {},
 const client = new PiClient({ endpoint: "ws://example/ws", transport });
 const pendingSession: Promise<string> = client.createSession();
 const admission: Promise<Result<"message.send">> = client.prompt("runtime", "hello");
+const requiredPalette: SessionTheme = (null! as Result<"session.open">).theme;
+// @ts-expect-error Successful create responses always require a theme.
+const missingPalette: Result<"session.create">["theme"] = undefined;
 const palette: SessionTheme | undefined = client.getState().themes["runtime"];
 sessionThemeSchema.safeParse(palette);
 // @ts-expect-error Theme colors are deeply immutable.

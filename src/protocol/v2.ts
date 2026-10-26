@@ -65,8 +65,7 @@ export const inventorySchema = z.object({ revision: counterSchema, sessions: z.a
 export const projectsSchema = z.object({ revision: counterSchema, catalogue: projectCatalogueSchema });
 export const completedSchema = z.object({ state: z.literal("completed") });
 export const acceptedSchema = z.object({ state: z.literal("accepted"), operationId: idSchema });
-// Optional only for older-server compatibility; theme-aware servers always send a concrete palette.
-const openedSchema = z.object({ summary: summarySchema, snapshot: snapshotSchema, theme: sessionThemeSchema.optional() });
+const openedSchema = z.object({ summary: summarySchema, snapshot: snapshotSchema, theme: sessionThemeSchema });
 export const initializeResultSchema = z.object({
   protocolVersion: z.literal(VERSION), serverVersion: z.string().min(1), serverInstanceId: idSchema, connectionId: idSchema,
   capabilities: z.array(capabilitySchema), inventory: inventorySchema, projects: projectsSchema, snapshots: z.array(snapshotSchema),

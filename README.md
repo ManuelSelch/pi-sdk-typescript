@@ -103,15 +103,16 @@ capabilities are ignored.
 
 ## Open/create theme metadata
 
-Theme-aware servers return a concrete `theme` alongside `summary` and `snapshot`
+Servers must return a concrete `theme` alongside `summary` and `snapshot`
 in `session.open` / `session.create` results. The exported `SessionTheme` /
 `sessionThemeSchema` contains a bounded name, explicit light/dark appearance,
 fixed Pi semantic colors and page/card/info surfaces. All colors are six-digit
 RGB hex; no Pi or Mantine dependency is introduced.
 
 `client.getState().themes[runtimeId]` exposes the deeply immutable palette.
-The SDK applies it before publishing the opened session. Older servers may omit
-`theme`; an open/create result without it clears that runtime's cache entry.
+The SDK applies it before publishing the opened session. A missing or null
+`theme` is a protocol error; it does not clear or replace the cached palette.
+No backward-compatibility handling is provided.
 Snapshots, presentation changes and reload operations never replace this cache.
 A same-server reconnect retains entries for runtimes still in inventory; close,
 inventory removal, runtime replacement and server-instance changes clear them.

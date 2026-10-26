@@ -108,10 +108,10 @@ Paths refer to the server. `file.open` opens there, not on iOS. Removing a proje
 
 ### Open/create theme metadata
 
-Successful `session.open` and `session.create` results may additionally carry
-a sibling `theme` field beside `summary` and `snapshot`. Theme-aware servers
-always send a concrete palette, including a deterministic fallback; omission is
-supported only for older-server compatibility. Null is invalid.
+Successful `session.open` and `session.create` results require a sibling `theme`
+field beside `summary` and `snapshot`. Servers always send a concrete palette,
+including a deterministic fallback. Missing or null themes are protocol errors;
+there is no backward-compatibility path.
 
 `SessionTheme` contains a non-control name (1–128 characters), `appearance`
 (`light` or `dark`), `colors` with the fixed roles in the authoritative
@@ -121,8 +121,9 @@ paths or ANSI are part of this representation.
 
 This metadata is not part of summaries, snapshots, initialization or presentation
 events, and adds no method, event or revision. The TypeScript client caches it by
-runtime identity independently of snapshot reduction. Open/create replaces or
-clears the corresponding entry; ordinary snapshots and same-server reconnect
+runtime identity independently of snapshot reduction. A valid open/create result
+replaces the corresponding entry; malformed results leave it untouched and fail
+protocol validation. Ordinary snapshots and same-server reconnect
 retain it for inventoried runtimes. Close, removal, replacement or a different
 server instance invalidates the entry. A new client cannot recover a palette
 through initialization alone; automatic reload refresh is deferred.

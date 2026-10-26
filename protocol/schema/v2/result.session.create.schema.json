@@ -864,7 +864,8 @@
   },
   "required": [
     "summary",
-    "snapshot"
+    "snapshot",
+    "theme"
   ],
   "$defs": {
     "__schema0": {

@@ -1,5 +1,168 @@
 [
   {
+    "name": "open result missing required theme",
+    "schema": "result.session.open",
+    "input": {
+      "summary": {
+        "sessionId": "runtime",
+        "title": "Example",
+        "projectPath": "/p",
+        "projectName": "p",
+        "status": "idle"
+      },
+      "snapshot": {
+        "sessionId": "runtime",
+        "throughSequence": 0,
+        "projectPath": "/p",
+        "messages": [],
+        "runtime": {
+          "status": "idle"
+        },
+        "steeringMessages": [],
+        "settings": {
+          "model": "p/m",
+          "availableModels": [
+            "p/m"
+          ],
+          "thinkingLevel": "off",
+          "availableThinkingLevels": [
+            "off"
+          ]
+        },
+        "commands": [],
+        "prompts": [],
+        "presentation": {
+          "revision": 0,
+          "widgets": [],
+          "footer": [],
+          "extensions": {
+            "buttons": [],
+            "badges": [],
+            "state": {
+              "demo": {
+                "value": [
+                  null,
+                  true,
+                  1,
+                  "text"
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "name": "create result missing required theme",
+    "schema": "result.session.create",
+    "input": {
+      "summary": {
+        "sessionId": "runtime",
+        "title": "Example",
+        "projectPath": "/p",
+        "projectName": "p",
+        "status": "idle"
+      },
+      "snapshot": {
+        "sessionId": "runtime",
+        "throughSequence": 0,
+        "projectPath": "/p",
+        "messages": [],
+        "runtime": {
+          "status": "idle"
+        },
+        "steeringMessages": [],
+        "settings": {
+          "model": "p/m",
+          "availableModels": [
+            "p/m"
+          ],
+          "thinkingLevel": "off",
+          "availableThinkingLevels": [
+            "off"
+          ]
+        },
+        "commands": [],
+        "prompts": [],
+        "presentation": {
+          "revision": 0,
+          "widgets": [],
+          "footer": [],
+          "extensions": {
+            "buttons": [],
+            "badges": [],
+            "state": {
+              "demo": {
+                "value": [
+                  null,
+                  true,
+                  1,
+                  "text"
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "name": "open result with null theme",
+    "schema": "result.session.open",
+    "input": {
+      "summary": {
+        "sessionId": "runtime",
+        "title": "Example",
+        "projectPath": "/p",
+        "projectName": "p",
+        "status": "idle"
+      },
+      "snapshot": {
+        "sessionId": "runtime",
+        "throughSequence": 0,
+        "projectPath": "/p",
+        "messages": [],
+        "runtime": {
+          "status": "idle"
+        },
+        "steeringMessages": [],
+        "settings": {
+          "model": "p/m",
+          "availableModels": [
+            "p/m"
+          ],
+          "thinkingLevel": "off",
+          "availableThinkingLevels": [
+            "off"
+          ]
+        },
+        "commands": [],
+        "prompts": [],
+        "presentation": {
+          "revision": 0,
+          "widgets": [],
+          "footer": [],
+          "extensions": {
+            "buttons": [],
+            "badges": [],
+            "state": {
+              "demo": {
+                "value": [
+                  null,
+                  true,
+                  1,
+                  "text"
+                ]
+              }
+            }
+          }
+        }
+      },
+      "theme": null
+    }
+  },
+  {
     "name": "theme with CSS expression",
     "schema": "SessionTheme",
     "input": {

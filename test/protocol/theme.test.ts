@@ -1,21 +1,16 @@
 import { describe, expect, it } from "vitest";
-import { z } from "zod";
-import { operationSchemas, summarySchema, snapshotSchema, presentationSchema, initializeResultSchema } from "../../src/protocol/v2.js";
+import { operationSchemas, snapshotSchema, presentationSchema, initializeResultSchema } from "../../src/protocol/v2.js";
 import { snap, summary, initialized } from "../v2-fixtures.js";
 import { themeFixture } from "../theme-fixture.js";
 
 describe.each(["session.open", "session.create"] as const)("%s theme result", method => {
   const schema = operationSchemas[method].result;
   const opened = { summary: summary(), snapshot: snap(), theme: themeFixture };
-  it("remains readable by older clients that strip additive fields", () => {
-    const legacy = z.object({ summary: summarySchema, snapshot: snapshotSchema });
-    expect(legacy.parse(opened)).toEqual({ summary: opened.summary, snapshot: opened.snapshot });
-  });
   it("retains concrete palette data alongside summary and snapshot", () => {
     expect(schema.parse(opened)).toEqual(opened);
   });
-  it("accepts older servers omitting theme, but rejects null", () => {
-    expect(schema.parse({ summary: summary(), snapshot: snap() })).not.toHaveProperty("theme");
+  it("requires theme and rejects missing or null palettes", () => {
+    expect(schema.safeParse({ summary: summary(), snapshot: snap() }).success).toBe(false);
     expect(schema.safeParse({ ...opened, theme: null }).success).toBe(false);
   });
   it.each(["", "#abc", "#gggggg", "red", "var(--accent)", "oklch(60% .1 200)", "\x1b[31m"])("rejects non-concrete hex color %j", color => {
@@ -44,6 +39,6 @@ it("does not add theme to summaries, snapshots, presentation or initialization",
   expect(snapshotSchema.parse({ ...snapshot, theme: themeFixture })).not.toHaveProperty("theme");
   expect(presentationSchema.parse({ revision: 0, widgets: [], footer: [], extensions: { buttons: [], badges: [], state: {} }, theme: themeFixture })).not.toHaveProperty("theme");
   expect(initializeResultSchema.parse({ ...initialized(), theme: themeFixture })).not.toHaveProperty("theme");
-  const result = operationSchemas["session.open"].result.parse({ summary: { ...summary(), theme: themeFixture }, snapshot });
+  const result = operationSchemas["session.open"].result.parse({ summary: { ...summary(), theme: themeFixture }, snapshot, theme: themeFixture });
   expect(result.summary).not.toHaveProperty("theme");
 });

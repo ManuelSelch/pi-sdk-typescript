@@ -126,11 +126,13 @@ it("stores palettes before publishing the opened session and keeps runtimes inde
   const reopen = t.client.openSession("/first"); t.reply({ summary: summary("a"), snapshot: snap("a"), theme: light }); await reopen;
   expect(t.client.getState().themes.a).toEqual(light); t.client.dispose();
 });
-it("clears a runtime palette when an older open response omits theme", async () => {
+it.each([undefined, null])("rejects open/create responses with theme %j without clearing cached palettes", async theme => {
   const t = setup(); t.ready();
   const first = t.client.openSession("/saved"); t.reply({ summary: summary(), snapshot: snap(), theme: themeFixture }); await first;
-  const second = t.client.openSession("/saved"); t.reply({ summary: summary(), snapshot: snap() }); await second;
-  expect(t.client.getState().themes).toEqual({}); t.client.dispose();
+  const second = t.client.createSession(); const rejected = expect(second).rejects.toMatchObject({ code: "invalidMessage" });
+  t.reply({ summary: summary(), snapshot: snap(), theme }); await rejected;
+  expect(t.client.getState().connection.phase).toBe("failed");
+  expect(t.client.getState().themes.s).toEqual(themeFixture); t.client.dispose();
 });
 it.each(["same", "different", "removed"] as const)("reconciles cached palettes on %s-server initialization", async kind => {
   const t = setup(); t.ready();
@@ -156,7 +158,7 @@ it("treats prototype-like runtime IDs as ordinary palette keys", async () => {
   expect(t.client.getState().themes["__proto__"]).toEqual(themeFixture);
   expect(Object.getPrototypeOf(t.client.getState().themes)).toBe(Object.prototype); t.client.dispose();
 });
-it("does not populate palettes from initialization or fail the session on an older server", () => {
+it("does not populate palettes from initialization", () => {
   const t = setup(); t.ready();
   expect(t.client.getState().themes).toEqual({}); expect(t.client.getState().connection.phase).toBe("ready"); t.client.dispose();
 });

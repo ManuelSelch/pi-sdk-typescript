@@ -49,10 +49,10 @@ describe("shared v2 contract artifacts", () => {
     }
   });
 
-  it.each(["session.open", "session.create"] as const)("validates %s palettes and older results in generated JSON Schema", method => {
+  it.each(["session.open", "session.create"] as const)("requires %s palettes in generated JSON Schema", method => {
     const validate = compiled[`result.${method}`]!;
     const opened = { summary: summary(), snapshot: snap() };
-    expect(validate(opened)).toBe(true);
+    expect(validate(opened)).toBe(false);
     expect(validate({ ...opened, theme: themeFixture })).toBe(true);
     expect(validate({ ...opened, theme: null })).toBe(false);
     expect(validate({ ...opened, theme: { ...themeFixture, colors: { ...themeFixture.colors, accent: "red" } } })).toBe(false);

@@ -218,8 +218,7 @@ export class PiClient {
   }
   private result(method: Method, value: unknown, sessionId?: string): void {
     if (method === "session.create" || method === "session.open") { const result = value as Result<"session.open">; if (result.summary.sessionId !== result.snapshot.sessionId) throw new Error("Open identity mismatch");
-      const themes = { ...this.state.themes, ...(result.theme ? { [result.snapshot.sessionId]: result.theme } : {}) };
-      if (!result.theme) delete themes[result.snapshot.sessionId];
+      const themes = { ...this.state.themes, [result.snapshot.sessionId]: result.theme };
       this.snapshot(result.snapshot, themes);
       if (!this.state.inventory.some(s => s.sessionId === result.summary.sessionId)) this.publish({ ...this.state, inventory: [...this.state.inventory, result.summary] });
     }

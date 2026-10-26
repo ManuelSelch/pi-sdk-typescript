@@ -252,6 +252,9 @@ export const domainExamples: { name: string; schema: string; input: unknown }[] 
   }
 ];
 export const invalidExamples: { name: string; schema: string; input: unknown }[] = [
+  { name: "open result missing required theme", schema: "result.session.open", input: { summary, snapshot } },
+  { name: "create result missing required theme", schema: "result.session.create", input: { summary, snapshot } },
+  { name: "open result with null theme", schema: "result.session.open", input: { summary, snapshot, theme: null } },
   { name: "theme with CSS expression", schema: "SessionTheme", input: { ...themeFixture, colors: { ...themeFixture.colors, accent: "var(--accent)" } } },
   { name: "theme with null appearance", schema: "SessionTheme", input: { ...themeFixture, appearance: null } },
   { name: "theme with unresolved surface", schema: "SessionTheme", input: { ...themeFixture, surfaces: { ...themeFixture.surfaces, pageBg: "" } } },
