@@ -1,4 +1,5 @@
 import type { Event, Method } from "../src/protocol/v2.js";
+import { themeFixture } from "./theme-fixture.js";
 
 const settings = { model: "p/m", availableModels: ["p/m"], thinkingLevel: "off", availableThinkingLevels: ["off"] };
 const presentation = { revision: 0, widgets: [], footer: [], extensions: { buttons: [], badges: [], state: { demo: { value: [null, true, 1, "text"] } } } };
@@ -8,7 +9,7 @@ const inventory = { revision: 0, sessions: [summary] };
 const projects = { revision: 0, catalogue: { projects: [] } };
 const completed = { state: "completed" };
 const accepted = { state: "accepted", operationId: "operation" };
-const opened = { summary, snapshot };
+const opened = { summary, snapshot, theme: themeFixture };
 export const operationExamples: Record<Method, { params: object; result: object; sessionId?: string }> = {
   "server.initialize": { params: { client: { name: "test", version: "1.0" }, capabilities: ["presentation"] }, result: { protocolVersion: 2, serverVersion: "0.0.0", serverInstanceId: "server", connectionId: "connection", capabilities: ["presentation"], inventory, projects, snapshots: [snapshot] } },
   "server.ping": { params: {}, result: completed },
@@ -70,6 +71,7 @@ export function validExamples() {
 }
 
 export const domainExamples: { name: string; schema: string; input: unknown }[] = [
+  { name: "concrete open/create palette", schema: "SessionTheme", input: themeFixture },
   {
     "name": "rich user message",
     "schema": "ChatMessage",
@@ -250,6 +252,9 @@ export const domainExamples: { name: string; schema: string; input: unknown }[] 
   }
 ];
 export const invalidExamples: { name: string; schema: string; input: unknown }[] = [
+  { name: "theme with CSS expression", schema: "SessionTheme", input: { ...themeFixture, colors: { ...themeFixture.colors, accent: "var(--accent)" } } },
+  { name: "theme with null appearance", schema: "SessionTheme", input: { ...themeFixture, appearance: null } },
+  { name: "theme with unresolved surface", schema: "SessionTheme", input: { ...themeFixture, surfaces: { ...themeFixture.surfaces, pageBg: "" } } },
   {
     "name": "unknown message role",
     "schema": "ChatMessage",

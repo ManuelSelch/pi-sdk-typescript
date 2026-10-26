@@ -4,6 +4,8 @@ import { describe, expect, it } from "vitest";
 import { requestSchema, serverMessageSchema, operationSchemas, parseResponse } from "../src/protocol/v2.js";
 import { generateV2Schemas } from "../scripts/v2-contract-schemas.js";
 import { validExamples } from "./v2-fixture-examples.js";
+import { themeFixture } from "./theme-fixture.js";
+import { snap, summary } from "./v2-fixtures.js";
 
 const root = new URL("../protocol/", import.meta.url);
 const schemas = generateV2Schemas();
@@ -45,6 +47,15 @@ describe("shared v2 contract artifacts", () => {
       expect(serverMessageSchema.safeParse(input).success).toBe(false);
       expect(compiled.ServerMessage!(input)).toBe(false);
     }
+  });
+
+  it.each(["session.open", "session.create"] as const)("validates %s palettes and older results in generated JSON Schema", method => {
+    const validate = compiled[`result.${method}`]!;
+    const opened = { summary: summary(), snapshot: snap() };
+    expect(validate(opened)).toBe(true);
+    expect(validate({ ...opened, theme: themeFixture })).toBe(true);
+    expect(validate({ ...opened, theme: null })).toBe(false);
+    expect(validate({ ...opened, theme: { ...themeFixture, colors: { ...themeFixture.colors, accent: "red" } } })).toBe(false);
   });
 
   it("keeps additive optional fields and unselected future capabilities forward compatible", () => {

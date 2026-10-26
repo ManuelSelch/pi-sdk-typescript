@@ -101,6 +101,27 @@ Optional capabilities are intersected during initialize; calling an unselected
 optional operation rejects with `unsupportedOperation`. Unknown requested
 capabilities are ignored.
 
+## Open/create theme metadata
+
+Theme-aware servers return a concrete `theme` alongside `summary` and `snapshot`
+in `session.open` / `session.create` results. The exported `SessionTheme` /
+`sessionThemeSchema` contains a bounded name, explicit light/dark appearance,
+fixed Pi semantic colors and page/card/info surfaces. All colors are six-digit
+RGB hex; no Pi or Mantine dependency is introduced.
+
+`client.getState().themes[runtimeId]` exposes the deeply immutable palette.
+The SDK applies it before publishing the opened session. Older servers may omit
+`theme`; an open/create result without it clears that runtime's cache entry.
+Snapshots, presentation changes and reload operations never replace this cache.
+A same-server reconnect retains entries for runtimes still in inventory; close,
+inventory removal, runtime replacement and server-instance changes clear them.
+Palettes are never transferred to a replacement identity.
+
+There is no theme request, theme event, local storage or automatic restoration
+from initialization. A fresh client/browser reload uses application defaults
+until an open/create result arrives. Theme refresh on resource reload is deferred.
+Server palette production and application rendering are separate integration work.
+
 ## Outcomes, cancellation and bounds
 
 Promise resolution means the operation's documented response meaning above,

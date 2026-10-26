@@ -106,6 +106,29 @@ Paths refer to the server. `file.open` opens there, not on iOS. Removing a proje
 
 ## 6. State and recovery
 
+### Open/create theme metadata
+
+Successful `session.open` and `session.create` results may additionally carry
+a sibling `theme` field beside `summary` and `snapshot`. Theme-aware servers
+always send a concrete palette, including a deterministic fallback; omission is
+supported only for older-server compatibility. Null is invalid.
+
+`SessionTheme` contains a non-control name (1–128 characters), `appearance`
+(`light` or `dark`), `colors` with the fixed roles in the authoritative
+`sessionThemeSchema`, and `surfaces` with `pageBg`, `cardBg`, `infoBg`.
+Every color is a six-digit RGB hex string. No raw theme expressions, source
+paths or ANSI are part of this representation.
+
+This metadata is not part of summaries, snapshots, initialization or presentation
+events, and adds no method, event or revision. The TypeScript client caches it by
+runtime identity independently of snapshot reduction. Open/create replaces or
+clears the corresponding entry; ordinary snapshots and same-server reconnect
+retain it for inventoried runtimes. Close, removal, replacement or a different
+server instance invalidates the entry. A new client cannot recover a palette
+through initialization alone; automatic reload refresh is deferred.
+
+### Authoritative session state
+
 - Snapshots contain identity, `throughSequence`, metadata, finalized messages, runtime status/run/error, steering queue, structured model/thinking settings, commands, pending questions and optional presentation state.
 - Messages retain existing text/thinking, skill, tool, bash, custom-message and truncation data. Snapshots reflect Pi's current context; compaction may shorten history. Live/final/snapshot entries use consistent IDs within a runtime.
 - Core session events increment a per-runtime `sequence`. Snapshot watermarks do not increment it. Prepare asynchronously, then capture current state/watermark and enqueue synchronously; never stamp stale state with a newer sequence.

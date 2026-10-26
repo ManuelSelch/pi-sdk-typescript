@@ -18,7 +18,7 @@ try {
   const modules = await readdir(join(temporary, "node_modules")); assert(!modules.some(name => ["react", "@mantine", "@earendil-works", "ws"].includes(name)));
   await writeFile(join(temporary, "consumer.ts"), `
 import { PiClient, PROTOCOL_VERSION, type Request, type TransportFactory, type Result } from "@manuelselch/pi-sdk";
-import { requestSchema, serverMessageSchema, type ServerMessage } from "@manuelselch/pi-sdk/protocol";
+import { requestSchema, serverMessageSchema, sessionThemeSchema, type SessionTheme, type ServerMessage } from "@manuelselch/pi-sdk/protocol";
 const command: Request<"run.abort"> = { version: PROTOCOL_VERSION, type: "request", requestId: "r", method: "run.abort", sessionId: "runtime", params: {} };
 const event: ServerMessage = { version: 2, type: "protocolError", serverInstanceId: "server", error: { code: "example", message: "Example" } };
 requestSchema.parse(command); serverMessageSchema.parse(event);
@@ -26,6 +26,10 @@ const transport: TransportFactory = (_endpoint, _handlers) => ({ send(_text) {},
 const client = new PiClient({ endpoint: "ws://example/ws", transport });
 const pendingSession: Promise<string> = client.createSession();
 const admission: Promise<Result<"message.send">> = client.prompt("runtime", "hello");
+const palette: SessionTheme | undefined = client.getState().themes["runtime"];
+sessionThemeSchema.safeParse(palette);
+// @ts-expect-error Theme colors are deeply immutable.
+client.getState().themes["runtime"].colors.accent = "#ffffff";
 // @ts-expect-error State is deeply immutable.
 client.getState().inventory.push({});
 // @ts-expect-error Convenience controls always require explicit runtime identity.
@@ -58,6 +62,9 @@ assert.equal(client.getState().connection.phase, "ready"); assert(Object.isFroze
 const created = client.createSession("/example"); assert.equal(sent[1].method, "session.create");
 handlers.message(JSON.stringify({ version: 2, type: "response", requestId: sent[1].requestId, ok: true, result: samples.operations.find(s => s.method === "session.create").response.result }));
 assert.equal(await created, "runtime"); assert.equal(client.getSession("runtime").settings.model, "p/m");
+const theme = samples.operations.find(s => s.method === "session.create").response.result.theme;
+assert.deepEqual(client.getState().themes.runtime, theme); assert(Object.isFrozen(client.getState().themes.runtime.colors));
+assert.deepEqual(contract.sessionThemeSchema.parse(theme), theme);
 const prompt = client.prompt("runtime", "hello"); assert.equal(sent[2].method, "message.send"); handlers.message(JSON.stringify({ version: 2, type: "response", requestId: sent[2].requestId, ok: true, result: { state: "accepted", operationId: "op" } })); assert.equal((await prompt).state, "accepted");
 client.dispose(); assert.equal(callbacks.size, 0); assert.equal(client.getState().connection.phase, "disposed");
 `);

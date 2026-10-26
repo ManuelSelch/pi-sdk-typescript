@@ -1,4 +1,4 @@
-import { CONTROLLER_REPLACED_CODE, type ProjectCatalogue, type WebFeature, type ThinkingLevel, type UiPromptResult, type DirectoryBrowse, type DirectoryListing, type CommandCompletionItem } from "./protocol/index.js";
+import { CONTROLLER_REPLACED_CODE, type ProjectCatalogue, type WebFeature, type ThinkingLevel, type UiPromptResult, type DirectoryBrowse, type DirectoryListing, type CommandCompletionItem, type SessionTheme } from "./protocol/index.js";
 import { capabilitySchema, requestSchema, serverMessageSchema, parseResponse, type ServerMessage, type Event, type Method, type Params, type Result, type Capability, type OpenSessionSummary, type SessionSnapshot } from "./protocol/v2.js";
 import { SDKError } from "./errors.js";
 import { defaultScheduler, type Scheduler, type CancellationSignal } from "./platform.js";
@@ -14,6 +14,8 @@ export interface ClientState {
   connectionId?: string;
   capabilities: Capability[];
   sessions: Record<string, SessionState>;
+  /** Open/create palettes; snapshots never replace this runtime-scoped cache. */
+  themes: Record<string, SessionTheme>;
   inventory: OpenSessionSummary[];
   inventoryRevision: number;
   catalogue: ProjectCatalogue;
@@ -48,7 +50,7 @@ function freeze<T>(value: T): T {
 }
 /** UI-independent v2 client. No navigation, mutation replay, journal or Pi scheduler. */
 export class PiClient {
-  private state: ClientState = freeze({ connection: { phase: "stopped" }, sessions: {}, inventory: [], inventoryRevision: -1, catalogue: { projects: [] }, projectsRevision: -1, features: [], capabilities: [] });
+  private state: ClientState = freeze({ connection: { phase: "stopped" }, sessions: {}, themes: {}, inventory: [], inventoryRevision: -1, catalogue: { projects: [] }, projectsRevision: -1, features: [], capabilities: [] });
   private readonly stateListeners = new Set<(state: ReadonlyDeep<ClientState>) => void>();
   private readonly messageListeners = new Set<(message: ReadonlyDeep<ServerMessage>) => void>();
   private readonly errorListeners = new Set<(error: SDKError) => void>();
@@ -209,11 +211,16 @@ export class PiClient {
     if (new Set(ids).size !== ids.length || new Set(snapshots).size !== snapshots.length || ids.length !== snapshots.length || ids.some(id => !snapshots.includes(id)) || result.capabilities.some(c => !this.capabilities.includes(c))) throw new Error("Invalid initial inventory");
     const sessions = Object.fromEntries(result.snapshots.map(snapshot => [snapshot.sessionId, applySnapshot(initialSessionState, snapshot)]));
     this.retryMs = 250; if (this.watchdog !== undefined) this.scheduler.clearTimeout(this.watchdog); this.watchdog = undefined;
-    this.publish({ connection: { phase: "ready" }, serverInstanceId: result.serverInstanceId, connectionId: result.connectionId, capabilities: result.capabilities, sessions, inventory: result.inventory.sessions, inventoryRevision: result.inventory.revision, catalogue: result.projects.catalogue, projectsRevision: result.projects.revision,
+    const themes = this.state.serverInstanceId === result.serverInstanceId
+      ? Object.fromEntries(Object.entries(this.state.themes).filter(([id]) => Object.hasOwn(sessions, id))) : {};
+    this.publish({ connection: { phase: "ready" }, serverInstanceId: result.serverInstanceId, connectionId: result.connectionId, capabilities: result.capabilities, sessions, themes, inventory: result.inventory.sessions, inventoryRevision: result.inventory.revision, catalogue: result.projects.catalogue, projectsRevision: result.projects.revision,
       features: result.capabilities.includes("server.restart") ? [{ id: "app.restart", kind: "action", group: "app", title: "Restart server", state: { label: "Restart" } }] : [] });
   }
   private result(method: Method, value: unknown, sessionId?: string): void {
-    if (method === "session.create" || method === "session.open") { const result = value as Result<"session.open">; if (result.summary.sessionId !== result.snapshot.sessionId) throw new Error("Open identity mismatch"); this.snapshot(result.snapshot);
+    if (method === "session.create" || method === "session.open") { const result = value as Result<"session.open">; if (result.summary.sessionId !== result.snapshot.sessionId) throw new Error("Open identity mismatch");
+      const themes = { ...this.state.themes, ...(result.theme ? { [result.snapshot.sessionId]: result.theme } : {}) };
+      if (!result.theme) delete themes[result.snapshot.sessionId];
+      this.snapshot(result.snapshot, themes);
       if (!this.state.inventory.some(s => s.sessionId === result.summary.sessionId)) this.publish({ ...this.state, inventory: [...this.state.inventory, result.summary] });
     }
     else if (method === "session.snapshot") { const snapshot = value as SessionSnapshot; if (snapshot.sessionId !== sessionId) throw new Error("Snapshot identity mismatch"); this.snapshot(snapshot); }
@@ -234,12 +241,13 @@ export class PiClient {
   private forget(id: string): void {
     this.pending.closeSession(id, "session.close"); this.gaps.delete(id); this.recovering.delete(id);
     const sessions = { ...this.state.sessions }; delete sessions[id];
-    this.publish({ ...this.state, sessions, inventory: this.state.inventory.filter(s => s.sessionId !== id) });
+    const themes = { ...this.state.themes }; delete themes[id];
+    this.publish({ ...this.state, sessions, themes, inventory: this.state.inventory.filter(s => s.sessionId !== id) });
   }
-  private snapshot(snapshot: SessionSnapshot): void {
+  private snapshot(snapshot: SessionSnapshot, themes = this.state.themes): void {
     if (!Object.hasOwn(this.state.sessions, snapshot.sessionId) && Object.keys(this.state.sessions).length >= this.maxSessions) throw new Error("Session limit");
     const state = Object.hasOwn(this.state.sessions, snapshot.sessionId) ? this.state.sessions[snapshot.sessionId]! : initialSessionState;
-    const session = applySnapshot(state, snapshot); this.publish({ ...this.state, sessions: { ...this.state.sessions, [snapshot.sessionId]: session } });
+    const session = applySnapshot(state, snapshot); this.publish({ ...this.state, themes, sessions: { ...this.state.sessions, [snapshot.sessionId]: session } });
     this.replay(snapshot.sessionId);
   }
   /**
@@ -252,6 +260,7 @@ export class PiClient {
     this.pending.closeSession(previous, "session.close");
     this.gaps.delete(previous); this.recovering.delete(previous);
     const sessions = { ...this.state.sessions }; delete sessions[previous];
+    const themes = { ...this.state.themes }; delete themes[previous]; delete themes[snapshot.sessionId];
     const base = Object.hasOwn(sessions, snapshot.sessionId) ? sessions[snapshot.sessionId]! : initialSessionState;
     sessions[snapshot.sessionId] = applySnapshot(base, snapshot);
     const index = this.state.inventory.findIndex(entry => entry.sessionId === previous);
@@ -259,7 +268,7 @@ export class PiClient {
     const inventory = index === -1
       ? (this.state.inventory.some(entry => entry.sessionId === summary.sessionId) ? this.state.inventory : [...this.state.inventory, summary])
       : this.state.inventory.map((entry, position) => position === index ? summary : entry);
-    this.publish({ ...this.state, sessions, inventory });
+    this.publish({ ...this.state, sessions, themes, inventory });
     this.replay(snapshot.sessionId);
   }
   private replay(id: string): void {

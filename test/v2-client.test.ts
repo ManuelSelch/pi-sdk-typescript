@@ -3,6 +3,7 @@ import { PiClient } from "../src/client.js";
 import { fakeTransport } from "./fake-transport.js";
 import type { Event } from "../src/protocol/v2.js";
 import { snap, summary, initialized, event } from "./v2-fixtures.js";
+import { themeFixture } from "./theme-fixture.js";
 beforeEach(() => vi.useFakeTimers()); afterEach(() => vi.useRealTimers());
 function setup(options: Partial<ConstructorParameters<typeof PiClient>[0]> = {}) {
   const fake = fakeTransport(); const client = new PiClient({ endpoint: "ws://example/ws", transport: fake.factory, ...options });
@@ -99,6 +100,65 @@ it("does not resurrect an already closed identity from a late replacement event"
 it("fails boundedly when a recovery snapshot cannot heal the observed sequence gap", async () => {
   const t = setup(); t.ready(); t.socket.message(event("message.delta", { runId: "r", delta: "gap" }, 3)); t.reply(snap("s", 0)); await Promise.resolve();
   expect(t.client.getState().connection.phase).toBe("failed"); expect(t.requests().filter(r => r.method === "session.snapshot")).toHaveLength(1); t.client.dispose();
+});
+it.each(["session.open", "session.create"] as const)("caches the %s palette separately from session snapshots", async method => {
+  const t = setup(); t.ready();
+  const opened = t.client.request(method, method === "session.open" ? { sessionPath: "/saved" } : {});
+  t.reply({ summary: summary(), snapshot: snap(), theme: themeFixture }); await opened;
+  expect(t.client.getState().themes.s).toEqual(themeFixture);
+  expect(Object.isFrozen(t.client.getState().themes.s?.colors)).toBe(true);
+  t.socket.message({ ...event("session.snapshot", snap("s", 2)), sessionId: "s" });
+  t.socket.message({ ...event("presentation.changed", { revision: 1, widgets: [], footer: [], extensions: { buttons: [], badges: [], state: {} } }), sessionId: "s" });
+  const reload = t.client.reloadSession("s"); t.reply({ state: "accepted", operationId: "reload" }); await reload;
+  expect(t.client.getState().themes.s).toEqual(themeFixture);
+  expect(t.requests().map(request => request.method)).toEqual(["server.initialize", method, "session.reload"]);
+  t.client.dispose();
+});
+it("stores palettes before publishing the opened session and keeps runtimes independent", async () => {
+  const t = setup(); t.ready([]);
+  const observations: unknown[] = [];
+  t.client.subscribe(state => { if (state.sessions.a) observations.push(state.themes.a); });
+  const first = t.client.createSession(); t.reply({ summary: summary("a"), snapshot: snap("a"), theme: themeFixture }); await first;
+  expect(observations.length).toBeGreaterThan(0); expect(observations.every(value => value === t.client.getState().themes.a)).toBe(true);
+  const light = { ...themeFixture, name: "paper-pine", appearance: "light" };
+  const second = t.client.openSession("/second"); t.reply({ summary: summary("b"), snapshot: snap("b"), theme: light }); await second;
+  expect(t.client.getState().themes).toEqual({ a: themeFixture, b: light });
+  const reopen = t.client.openSession("/first"); t.reply({ summary: summary("a"), snapshot: snap("a"), theme: light }); await reopen;
+  expect(t.client.getState().themes.a).toEqual(light); t.client.dispose();
+});
+it("clears a runtime palette when an older open response omits theme", async () => {
+  const t = setup(); t.ready();
+  const first = t.client.openSession("/saved"); t.reply({ summary: summary(), snapshot: snap(), theme: themeFixture }); await first;
+  const second = t.client.openSession("/saved"); t.reply({ summary: summary(), snapshot: snap() }); await second;
+  expect(t.client.getState().themes).toEqual({}); t.client.dispose();
+});
+it.each(["same", "different", "removed"] as const)("reconciles cached palettes on %s-server initialization", async kind => {
+  const t = setup(); t.ready();
+  const opened = t.client.openSession("/saved"); t.reply({ summary: summary(), snapshot: snap(), theme: themeFixture }); await opened;
+  t.socket.end(); vi.advanceTimersByTime(250);
+  const next = t.sockets[1]!; next.open();
+  next.message({ version: 2, type: "response", requestId: JSON.parse(next.sent[0]!).requestId, ok: true, result: initialized(kind === "removed" ? [] : [snap()], kind === "different" ? "new-process" : "process") });
+  expect(t.client.getState().themes).toEqual(kind === "same" ? { s: themeFixture } : {});
+  t.client.dispose();
+});
+it.each(["close", "inventory", "replace"] as const)("clears palettes on runtime %s without transferring to a replacement", async kind => {
+  const t = setup(); t.ready();
+  const opened = t.client.openSession("/saved"); t.reply({ summary: summary(), snapshot: snap(), theme: themeFixture }); await opened;
+  if (kind === "close") t.socket.message(event("session.closed", { reason: "requested" }, 1));
+  else if (kind === "inventory") t.socket.message(event("session.list.changed", { revision: 1, sessions: [] }));
+  else t.socket.message(event("session.replaced", { previousSessionId: "s", snapshot: snap("replacement") }));
+  expect(t.client.getState().themes).toEqual({}); t.client.dispose();
+});
+it("treats prototype-like runtime IDs as ordinary palette keys", async () => {
+  const t = setup(); t.ready([]);
+  const opened = t.client.createSession(); t.reply({ summary: summary("__proto__"), snapshot: snap("__proto__"), theme: themeFixture }); await opened;
+  expect(Object.hasOwn(t.client.getState().themes, "__proto__")).toBe(true);
+  expect(t.client.getState().themes["__proto__"]).toEqual(themeFixture);
+  expect(Object.getPrototypeOf(t.client.getState().themes)).toBe(Object.prototype); t.client.dispose();
+});
+it("does not populate palettes from initialization or fail the session on an older server", () => {
+  const t = setup(); t.ready();
+  expect(t.client.getState().themes).toEqual({}); expect(t.client.getState().connection.phase).toBe("ready"); t.client.dispose();
 });
 it("does not automatically fight a replacement controller", () => {
   const t = setup(); t.ready(); t.socket.end(4001); vi.advanceTimersByTime(20_000); expect(t.sockets).toHaveLength(1);
