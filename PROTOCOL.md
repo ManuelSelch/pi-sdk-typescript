@@ -50,6 +50,7 @@ Session operations require the target runtime's `sessionId`. Server operations d
 
 | Method | Scope / input | Response meaning |
 |---|---|---|
+| `server.initialize` | Server; client name/version and requested optional capabilities | Connection readiness barrier; protocol/server versions, server/connection identity, selected capabilities, complete runtime inventory, project catalogue and all runtime snapshots (see §2) |
 | `session.create` | Server; optional `projectPath` | Created summary and snapshot; omitted path uses server default |
 | `session.open` | Server; `sessionPath` | Loaded/existing summary and snapshot; concurrent opens converge to one runtime |
 | `session.list` | Server | Complete runtime inventory |
