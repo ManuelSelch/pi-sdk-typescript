@@ -50,7 +50,11 @@ const eventData: Record<Event["event"], object> = {
   "settings.changed": settings,
   "operation.finished": { operationId: "operation", requestId: "request", outcome: "completed" },
   "notification.created": { level: "info", message: "Notice" },
-  "prompt.list.changed": { prompts: [{ id: "prompt", title: "Continue?", kind: "confirm", message: "Run?" }] },
+  "prompt.list.changed": { prompts: [
+    { id: "prompt", title: "Continue?", kind: "confirm", message: "Run?" },
+    { id: "question", title: "Check 2", kind: "select", options: ["A", "B"], submission: "explicit", body: { format: "markdown", text: "**Explain** the code.\n\n```ts\nrun();\n```" }, submitLabel: "Continue", cancelLabel: "Cancel quiz" },
+    { id: "reasoning", title: "Explain", kind: "editor", body: { format: "plain", text: "Why?" }, prefill: "", submitLabel: "Submit answer" },
+  ] },
   "presentation.changed": presentation,
   "project.list.changed": projects,
 };

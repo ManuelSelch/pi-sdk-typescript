@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { promptPresentationShape, promptSubmissionSchema } from "./prompt-presentation.js";
 import { sessionThemeSchema } from "./theme.js";
 import { directoryBrowseSchema, directoryListingSchema } from "./directories.js";
 import { filePathSchema } from "./files.js";
@@ -17,10 +18,10 @@ export const errorSchema = z.object({ code: z.string().min(1).max(128), message:
 export type ProtocolError = z.infer<typeof errorSchema>;
 export type JsonValue = z.infer<ReturnType<typeof z.json>>;
 export const promptSchema = z.discriminatedUnion("kind", [
-  z.object({ id: idSchema, title: z.string(), kind: z.literal("select"), options: z.array(z.string()) }),
-  z.object({ id: idSchema, title: z.string(), kind: z.literal("confirm"), message: z.string() }),
-  z.object({ id: idSchema, title: z.string(), kind: z.literal("input"), placeholder: z.string().optional() }),
-  z.object({ id: idSchema, title: z.string(), kind: z.literal("editor"), prefill: z.string().optional() }),
+  z.object({ id: idSchema, title: z.string(), kind: z.literal("select"), options: z.array(z.string()), ...promptPresentationShape, submission: promptSubmissionSchema }),
+  z.object({ id: idSchema, title: z.string(), kind: z.literal("confirm"), message: z.string(), ...promptPresentationShape, submission: z.never().optional() }),
+  z.object({ id: idSchema, title: z.string(), kind: z.literal("input"), placeholder: z.string().optional(), ...promptPresentationShape, submission: z.never().optional() }),
+  z.object({ id: idSchema, title: z.string(), kind: z.literal("editor"), prefill: z.string().optional(), ...promptPresentationShape, submission: z.never().optional() }),
 ]);
 export const promptResultSchema = z.discriminatedUnion("cancelled", [
   z.object({ cancelled: z.literal(true) }),

@@ -420,13 +420,55 @@
                 "items": {
                   "type": "string"
                 }
+              },
+              "body": {
+                "type": "object",
+                "properties": {
+                  "format": {
+                    "type": "string",
+                    "enum": [
+                      "plain",
+                      "markdown"
+                    ]
+                  },
+                  "text": {
+                    "type": "string",
+                    "maxLength": 32768
+                  }
+                },
+                "required": [
+                  "format",
+                  "text"
+                ]
+              },
+              "submitLabel": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 64,
+                "pattern": "\\S",
+                "x-pi-normalization": "trim"
+              },
+              "cancelLabel": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 64,
+                "pattern": "\\S",
+                "x-pi-normalization": "trim"
+              },
+              "submission": {
+                "type": "string",
+                "enum": [
+                  "immediate",
+                  "explicit"
+                ]
               }
             },
             "required": [
               "id",
               "title",
               "kind",
-              "options"
+              "options",
+              "submission"
             ]
           },
           {
@@ -447,6 +489,43 @@
               },
               "message": {
                 "type": "string"
+              },
+              "body": {
+                "type": "object",
+                "properties": {
+                  "format": {
+                    "type": "string",
+                    "enum": [
+                      "plain",
+                      "markdown"
+                    ]
+                  },
+                  "text": {
+                    "type": "string",
+                    "maxLength": 32768
+                  }
+                },
+                "required": [
+                  "format",
+                  "text"
+                ]
+              },
+              "submitLabel": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 64,
+                "pattern": "\\S",
+                "x-pi-normalization": "trim"
+              },
+              "cancelLabel": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 64,
+                "pattern": "\\S",
+                "x-pi-normalization": "trim"
+              },
+              "submission": {
+                "not": {}
               }
             },
             "required": [
@@ -474,6 +553,43 @@
               },
               "placeholder": {
                 "type": "string"
+              },
+              "body": {
+                "type": "object",
+                "properties": {
+                  "format": {
+                    "type": "string",
+                    "enum": [
+                      "plain",
+                      "markdown"
+                    ]
+                  },
+                  "text": {
+                    "type": "string",
+                    "maxLength": 32768
+                  }
+                },
+                "required": [
+                  "format",
+                  "text"
+                ]
+              },
+              "submitLabel": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 64,
+                "pattern": "\\S",
+                "x-pi-normalization": "trim"
+              },
+              "cancelLabel": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 64,
+                "pattern": "\\S",
+                "x-pi-normalization": "trim"
+              },
+              "submission": {
+                "not": {}
               }
             },
             "required": [
@@ -500,6 +616,43 @@
               },
               "prefill": {
                 "type": "string"
+              },
+              "body": {
+                "type": "object",
+                "properties": {
+                  "format": {
+                    "type": "string",
+                    "enum": [
+                      "plain",
+                      "markdown"
+                    ]
+                  },
+                  "text": {
+                    "type": "string",
+                    "maxLength": 32768
+                  }
+                },
+                "required": [
+                  "format",
+                  "text"
+                ]
+              },
+              "submitLabel": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 64,
+                "pattern": "\\S",
+                "x-pi-normalization": "trim"
+              },
+              "cancelLabel": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 64,
+                "pattern": "\\S",
+                "x-pi-normalization": "trim"
+              },
+              "submission": {
+                "not": {}
               }
             },
             "required": [

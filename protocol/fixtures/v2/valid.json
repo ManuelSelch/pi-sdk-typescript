@@ -1354,6 +1354,33 @@
             "title": "Continue?",
             "kind": "confirm",
             "message": "Run?"
+          },
+          {
+            "id": "question",
+            "title": "Check 2",
+            "kind": "select",
+            "options": [
+              "A",
+              "B"
+            ],
+            "submission": "explicit",
+            "body": {
+              "format": "markdown",
+              "text": "**Explain** the code.\n\n```ts\nrun();\n```"
+            },
+            "submitLabel": "Continue",
+            "cancelLabel": "Cancel quiz"
+          },
+          {
+            "id": "reasoning",
+            "title": "Explain",
+            "kind": "editor",
+            "body": {
+              "format": "plain",
+              "text": "Why?"
+            },
+            "prefill": "",
+            "submitLabel": "Submit answer"
           }
         ]
       }

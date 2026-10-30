@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { promptPresentationShape, promptSubmissionSchema } from "./prompt-presentation.js";
 
 
 /**
@@ -184,6 +185,15 @@ export const uiPromptSchema = z.object({
   options: z.array(z.string()).optional(),
   placeholder: z.string().optional(),
   prefill: z.string().optional(),
+  ...promptPresentationShape,
+  submission: promptSubmissionSchema.optional(),
+}).superRefine((prompt, ctx) => {
+  if (prompt.kind === "select" && (!prompt.submission || !prompt.options)) {
+    ctx.addIssue({ code: "custom", message: "Select requires options and submission" });
+  }
+  if (prompt.kind !== "select" && prompt.submission !== undefined) {
+    ctx.addIssue({ code: "custom", message: "Only selects accept submission" });
+  }
 });
 
 export type UiPrompt = z.infer<typeof uiPromptSchema>;
