@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { promptPresentationShape, promptSubmissionSchema } from "./prompt-presentation.js";
+import { modelScopeSchema, validateModelScope } from "./model-scope.js";
 
 
 /**
@@ -183,11 +184,13 @@ export const uiPromptSchema = z.object({
   title: z.string(),
   message: z.string().optional(),
   options: z.array(z.string()).optional(),
+  modelScope: modelScopeSchema.optional(),
   placeholder: z.string().optional(),
   prefill: z.string().optional(),
   ...promptPresentationShape,
   submission: promptSubmissionSchema.optional(),
 }).superRefine((prompt, ctx) => {
+  validateModelScope(prompt, ctx);
   if (prompt.kind === "select" && (!prompt.submission || !prompt.options)) {
     ctx.addIssue({ code: "custom", message: "Select requires options and submission" });
   }

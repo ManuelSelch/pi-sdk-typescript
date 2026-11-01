@@ -156,6 +156,11 @@ independent.
 
 ## Protocol and package checks
 
+Native `/model` prompts carry all available model references in `options` and a
+`modelScope: { scoped: string[] }` subset for scoped/all filtering. Scope metadata
+is limited to immediate selects and its references must be offered options.
+Clients filter locally; answers remain ordinary `prompt.answer` strings.
+
 `src/protocol/v2.ts` is authoritative; `models.ts` holds shared domain schemas,
 not a legacy envelope. Regenerate schemas and examples:
 

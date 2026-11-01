@@ -453,6 +453,20 @@
                           "type": "string"
                         }
                       },
+                      "modelScope": {
+                        "type": "object",
+                        "properties": {
+                          "scoped": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "required": [
+                          "scoped"
+                        ]
+                      },
                       "body": {
                         "type": "object",
                         "properties": {
@@ -558,6 +572,9 @@
                       },
                       "submission": {
                         "not": {}
+                      },
+                      "modelScope": {
+                        "not": {}
                       }
                     },
                     "required": [
@@ -622,6 +639,9 @@
                       },
                       "submission": {
                         "not": {}
+                      },
+                      "modelScope": {
+                        "not": {}
                       }
                     },
                     "required": [
@@ -684,6 +704,9 @@
                         "x-pi-normalization": "trim"
                       },
                       "submission": {
+                        "not": {}
+                      },
+                      "modelScope": {
                         "not": {}
                       }
                     },
@@ -1781,6 +1804,20 @@
                               "type": "string"
                             }
                           },
+                          "modelScope": {
+                            "type": "object",
+                            "properties": {
+                              "scoped": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              }
+                            },
+                            "required": [
+                              "scoped"
+                            ]
+                          },
                           "body": {
                             "type": "object",
                             "properties": {
@@ -1886,6 +1923,9 @@
                           },
                           "submission": {
                             "not": {}
+                          },
+                          "modelScope": {
+                            "not": {}
                           }
                         },
                         "required": [
@@ -1950,6 +1990,9 @@
                           },
                           "submission": {
                             "not": {}
+                          },
+                          "modelScope": {
+                            "not": {}
                           }
                         },
                         "required": [
@@ -2012,6 +2055,9 @@
                             "x-pi-normalization": "trim"
                           },
                           "submission": {
+                            "not": {}
+                          },
+                          "modelScope": {
                             "not": {}
                           }
                         },
@@ -3269,6 +3315,20 @@
                           "type": "string"
                         }
                       },
+                      "modelScope": {
+                        "type": "object",
+                        "properties": {
+                          "scoped": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "required": [
+                          "scoped"
+                        ]
+                      },
                       "body": {
                         "type": "object",
                         "properties": {
@@ -3374,6 +3434,9 @@
                       },
                       "submission": {
                         "not": {}
+                      },
+                      "modelScope": {
+                        "not": {}
                       }
                     },
                     "required": [
@@ -3438,6 +3501,9 @@
                       },
                       "submission": {
                         "not": {}
+                      },
+                      "modelScope": {
+                        "not": {}
                       }
                     },
                     "required": [
@@ -3500,6 +3566,9 @@
                         "x-pi-normalization": "trim"
                       },
                       "submission": {
+                        "not": {}
+                      },
+                      "modelScope": {
                         "not": {}
                       }
                     },
